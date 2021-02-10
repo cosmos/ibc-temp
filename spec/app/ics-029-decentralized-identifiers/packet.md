@@ -112,7 +112,7 @@ User<--Result---|<----------ACK {Success/Failure}------------------|
 Use case 2:
 
 ```
-Module1 ---AppPacket--> DID Module ----AppPacket---> Module2
+Module1 ---AppPacket--> DID Module ----AppPacket---------------> Module2
                                         |                           |
                                         |                           |
 <---Result----|<-----ACK{Success/Fail}--|                           |
