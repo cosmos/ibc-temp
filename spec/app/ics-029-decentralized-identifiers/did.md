@@ -174,27 +174,27 @@ Here is a DID that defines how a chain interacts with the Chain-Naming-Service m
 
 DID: `did:ibc:cosmos-hub:channel3:cns:ethermint`
 
-```json
+```yaml
 {
 "id": "did:ibc:cosmos-hub:channel:channel4:cns:ethermint",
 
-// The verification method in the authentication relationship
-// of the controller can make updates to this DID document.
-// NOTE: Controller can be different than Subject
+# The verification method in the authentication relationship
+# of the controller can make updates to this DID document.
+# NOTE: Controller can be different than Subject
 "controller": "did:ibc:cosmos-hub:channel4:cns:ethermint",
 
 "verification-methods": [
-    // This is the base verification method that controls this DID
-    // and can authenticate any packet for this DID.
+    # This is the base verification method that controls this DID
+    # and can authenticate any packet for this DID.
     {
         "id": "did:ibc:cosmos-hub:channel4:cns:ethermint#blockchain-governance",
         "type": "DelegatedIBCAuthentication",
         "controller": "did:ibc:cosmos-hub:channel4:cns:ethermint",
         "delegateTo": "channel3/gov",
-        // NOTE: These fields do not necessarily need to exist in this document,
-        // they can be hardcoded into the governance module.
-        // However, doing this might allow the DID document to specify
-        // different required thresholds for different services.
+        # NOTE: These fields do not necessarily need to exist in this document,
+        # they can be hardcoded into the governance module.
+        ## However, doing this might allow the DID document to specify
+        # different required thresholds for different services.
         "app-specific-verify-fields": {
             "participation-threshold": 0.5,
             "yes-threshold": 0.5,
@@ -206,16 +206,16 @@ DID: `did:ibc:cosmos-hub:channel3:cns:ethermint`
         "type": "DelegatedIBCAuthentication",
         "controller": "did:cosmos-hub:channel3:gov",
         "delegateTo": "channel3/gov"
-        // Here is an example of using the same authentication module
-        // with different parameters to create a more "lenient" governance
-        // mechanism.
+        # Here is an example of using the same authentication module
+        # with different parameters to create a more "lenient" governance
+        # mechanism.
         "app-specific-verify-fields": {
             "participation-threshold": 0.3,
             "yes-threshold": 0.2,
             "no-veto-threshold": 0.1,
         },
     },
-    // Channel1/port2 implements a fancy multisig protocol
+    # Channel1/port2 implements a fancy multisig protocol
     {
         "id": "did:ibc:cosmos-hub:channel3:cns:ethermint#delegatedAuthority2",
         "type": "DelegatedIBCAuthentication",
@@ -231,26 +231,26 @@ DID: `did:ibc:cosmos-hub:channel3:cns:ethermint`
             "threshold": 70,
         }
     },
-    // Channel8/port2 is a channel to the chain that owns the CNS domain.
-    // It will send a packet if the current validator set commits to the packet data and destination at a specific key.
-    // It needs no app-specific-verify-fields and will use PacketFlow2 depicted below.
+    # Channel8/port2 is a channel to the chain that owns the CNS domain.
+    # It will send a packet if the current validator set commits to the packet data and destination at a specific key.
+    # It needs no app-specific-verify-fields and will use PacketFlow2 depicted below.
     {
         "id": "did:ibc:cosmos-hub:channel3:cns:ethermint#validatorAuthority",
         "type": "DelegatedIBCAuthentication",
         "controller": "did:cosmos-hub:channel4:cns:ethermint",
         "delegateTo": "channel8/port2",
     },
-    // Channel4/port7 is a channel to a solo-machine
-    // There are no app-specific verify fields. The solo-machine is trusted to authorize the party on a private server and send an IBC packet across this channel.
-    // The server might implement a traditional username/password scheme to authenticate the subject before sending the packet
-    // This verification method would be used with PacketFlow 2 depicted below.
+    # Channel4/port7 is a channel to a solo-machine
+    # There are no app-specific verify fields. The solo-machine is trusted to authorize the party on a private server and send an IBC packet across this channel.
+    # The server might implement a traditional username/password scheme to authenticate the subject before sending the packet
+    # This verification method would be used with PacketFlow 2 depicted below.
     {
         "id": "did:ibc:cosmos-hub:channel3:cns:ethermint#loginAuthority",
         "type": "DelegatedIBCAuthentication",
         "controller": "did:cosmos-hub:channel4:cns:ethermint",
         "delegateTo": "channel4/port7",
     },
-    // This is a native authentication scheme. A simple public key which the DID module can verify on its own.
+    # This is a native authentication scheme. A simple public key which the DID module can verify on its own.
     {
       "id": "did:ibc:cosmos-hub:channel:module:module-specific-id#native-key1",
       "type": "Ed25519VerificationKey2018",
@@ -260,11 +260,11 @@ DID: `did:ibc:cosmos-hub:channel3:cns:ethermint`
     ...
 ],
 
-// The verification method specified in authentication relationship is able to authenticate any packet
+# The verification method specified in authentication relationship is able to authenticate any packet
 "authentication": "did:ibc:cosmos-hub:channel:module:module-specific-id#baseAuthority",
 
 "services": [
-    // A lenient blockchain governance scheme is used to change light client fields in CNS mapping.
+    # A lenient blockchain governance scheme is used to change light client fields in CNS mapping.
     {
         "id": "did:ibc:cosmos-hub:channel3:cns:ethermint#ChangeClientFields",
         "type": "DelegatedIBCService",
@@ -272,21 +272,21 @@ DID: `did:ibc:cosmos-hub:channel3:cns:ethermint`
         "authentication": "did:ibc:cosmos-hub:channel:module:module-specific-id#blockchain-gov-2",
     },
     {
-        // The current validator set is able to change the RPC fields
+        # The current validator set is able to change the RPC fields
         "id": "did:ibc:cosmos-hub:channel:module:module-specific-id#ChangeRPC",
         "type": "DelegatedIBCService",
         "serviceEndpoint": "channel9/port12",
         "authentication": "did:ibc:cosmos-hub:channel:module:module-specific-id#validatorAuthority",
     },
     {
-        // A multisig over the core developers can change the github fields in CNS mapping
+        # A multisig over the core developers can change the github fields in CNS mapping
         "id": "did:ibc:cosmos-hub:channel:module:module-specific-id#ChangeGitHub",
         "type": "DelegatedIBCService",
         "serviceEndpoint": "channel7/port2",
         "authentication": "did:ibc:cosmos-hub:channel:module:module-specific-id#delegatedAuthority2",
     },
     {
-        // The founder of the project can change his about page
+        # The founder of the project can change his about page
         "id": "did:ibc:cosmos-hub:channel:module:module-specific-id#AboutFounder",
         "type": "DelegatedIBCService",
         "serviceEndpoint": "channel9/port12",
