@@ -93,3 +93,29 @@ The service on the other end of the channel, is responsible for decoding the app
 ### Packet Flows
 
 This design enables two possible packet flows depending on context. All packet flows must be triggered by an end user. That end user may choose to interact with the DID module, which will authenticate and then forward an IBC packet to the application module. Or they can send a msg directly to the authenticating module, which will send a packet through the DID module and then to the application module.
+
+Use case 1:
+```
+User Msg -> DID Module ----optional DelegatedAuthPacket ---> Auth module
+                |                                                 |
+                |                                                 |
+User<--Result---|<----------ACK {Success/Failure}-----------------|
+                |
+            if auth succeeds
+                |
+                |--------------Send AppPacket---------------> App module
+                |                                                  |
+                |                                                  |
+User<--Result---|<----------ACK {Success/Failure}------------------|
+```
+
+Use case 2:
+
+```
+Module1 ---AppPacket--> DID Module ----AppPacket---> Module2
+                                        |                           |
+                                        |                           |
+<---Result----|<-----ACK{Success/Fail}--|                           |
+                                                                    |
+<---Result----|<-----ACK{Success/Fail}--|<----ACK{Success/Fail}-----|
+```
