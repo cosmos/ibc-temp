@@ -26,4 +26,4 @@ We can use IBC to provide more flexibility in how DIDs authenticate and verify s
 
 1. The DID module should be able to act as a uniform authentication layer for arbitrary entities to authenticate and interact with on-chain and off-chain services.
 2. Allow modules to implement arbitrary authentication logic on behalf of DID subject, with the DID subject authorizing different verification methods for different purposes.
-3. Allow DID subject to interact and authenticate with arbitrary applications, and send arbitrary application data along to the application.
+3. Allow the DID subject to interact and authenticate with arbitrary applications, and send arbitrary application data along to the application.

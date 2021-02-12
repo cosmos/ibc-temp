@@ -2,7 +2,7 @@
 
 A common use case of decentralized identifiers is the creation of a standard digital identity that can authenticate with apps and services. This use case generally entails an **on-chain** registry of identity and associated verification methods and delegated capabilities that can then be used to authenticate and log-in to a variety of **off-chain** apps and services.
 
-IBC DIDs will support this usecase, but will also enable authentication and capability delegation for **on-chain** apps through IBC.
+IBC DIDs will support this usecase, but will also enable authentication and capability delegation for **on-chain** apps.
 
 Additionally, IBC DIDs will also support arbitrary authentication schemes by providing the ability to delegate verification to a third party module over IBC.
 
@@ -16,7 +16,7 @@ IBC DIDs will support arbitrary verification methods by supporting just a single
 
 The `DelegatedIBCAuthentication` type has two required fields:
 
-`delegateTo`: This is the channel the DID module will delegate authentication to. The module on the other side of the channel will receive an authentication request from the DID module. If the module sends back a successful acknowledgement, the DID module will interpret this as successful authentication.
+`delegateTo`: This is the channel the DID module will delegate authentication to. The module on the other side of the channel will receive an authentication request from the DID module. If the module writes a successful acknowledgement, the DID module will interpret this as successful authentication.
 
 `app-specific-verify-fields`: This field contains all the application specific parameters necessary to authenticate interaction with the DID. All parameters and data regarding authentication should be housed here, the module should simply be responsible for injesting these parameters along with user provided authentication and performing the logic necessary to authenticate. No state necessary for authentication should be stored in the counterparty module.
 

@@ -4,7 +4,7 @@
 
 Before `DelegatedAuth` packets or `DelegatedService` packets can be sent across their respective `delegateTo` and `serviceEndpoint` channels, the channels must be established between the DID module and the respective counterparty module.
 
-The DID module must also differentiate between channels connecting to counterparty auth modules and channels connecting to counterparty app modules as they send different packets and have different callback logic.
+The DID module must differentiate between channels connecting to counterparty auth modules and channels connecting to counterparty app modules since they send different packets and have different callback logic.
 
 Thus the DID module reserves two ports: `did-auth` and `did-app` to service these two separate communication modes. Channels that connect to auth modules must use the `did-auth` port, and channels that connect to app modules must use the `did-app` port.
 
@@ -126,4 +126,3 @@ func OnChanCloseConfirm(
     return nil
 }
 ```
-
