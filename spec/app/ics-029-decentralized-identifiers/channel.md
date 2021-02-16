@@ -126,3 +126,78 @@ func OnChanCloseConfirm(
     return nil
 }
 ```
+
+```go
+// OnRecvPacket only supports receiving packets from the `did-auth` port
+// since auth modules may directly send packets to DID module in the
+// packet flow 2 case.
+// In this case, the DID module checks that the sending module is authorized to send the packet
+// and then forwards it along.
+func OnRecvPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) (*sdk.Result, []byte, error) {
+    switch packet.GetDestPort() {
+    case "did-auth":
+        appPacket := decodeAppPacket()
+        did := appPacket.Data.DID
+        document := resolveDID(did)
+
+        // check that the sender of the packet has authority to send on behalf of DID
+        // by checking that module is either authenticator of DID document
+        // or authenticator of the appropriate delegated service.
+        err := checkAuthority(document, packet.GetSourceChannel(), packet.GetSourcePort(), appPacket)
+        if err != nil {
+            return error
+        }
+
+        // forward to requested app module
+        channelKeeper.SendPacket(appPacket)
+        return nil, successfulAck(), nil
+    default:
+        return nil, nil, error
+    }
+}
+```
+
+```go
+// OnAcknowledgementPacket will listen for acks on the did-auth port and upon receiving a successful ack from the auth module,
+// the did module will forward the app packet to the requested app module.
+// It will delete the stored service request on a failed ack.
+// Any acks arriving from the app module will simply be logged for the end user.
+func OnAcknowledgementPacket(
+    ctx sdk.Context,
+    packet channeltypes.Packet,
+    acknowledgement []byte,
+) (*sdk.Result, error) {
+    // acknowledgement is default ack provided in channeltypes
+    ack := decodeDefaultAck(acknowledgement)
+    switch packet.GetSourcePort() {
+    case "did-auth":
+        if ack.Success() {
+            // retrieve the app packet that was intended to be sent by DID
+            // stored by DID module
+            appPacket := retrieveAppRequest(packet.DID, packet.Sequence)
+            channelKeeper.SendPacket(appPacket)
+        } else {
+            // Delete the service request as the authentication did not succeed
+            deleteAppRequest(packet.DID, packet.Sequence)
+        }
+    default:
+        log(ack)
+    }
+}
+```
+
+```go
+// OnTimeoutPacket will delete a service request if the DelegatedAuthPacket times out
+func OnTimeoutPacket(
+    ctx sdk.Context,
+    packet channeltypes.Packet,
+) (*sdk.Result, error) {
+    if packet.GetSourcePort() == "did-auth" {
+        // Delete the service request as the authentication did not succeed
+        deleteAppRequest(packet.DID, packet.Sequence)
+    }
+}
+```
