@@ -41,7 +41,7 @@ func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
         }
         // send auth packet over IBC to channel specified
         // in delegateTo field
-        sendAuthPacket(authPacketData, verificationMethod.DelegateTo)
+        sendPacket(authPacketData, verificationMethod.DelegateTo)
         
         // store app packet data along with its intended destination
         // under DID and sequence so it can be retrieved later
@@ -63,7 +63,7 @@ func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
     }
 
     // upon successful native authentication, send app packet immediately
-    sendAppPacket(appPacketData, service.ServiceEndpoint)
+    sendPacket(appPacketData, service.ServiceEndpoint)
     return result, nil
 }
 ```
@@ -243,8 +243,8 @@ func OnAcknowledgementPacket(
         if ack.Success() {
             // retrieve the app packet that was intended to be sent by DID
             // stored by DID module
-            appPacket := retrieveAppRequest(packet.DID, packet.Sequence)
-            channelKeeper.SendPacket(appPacket)
+            appPacket, serviceEndpoint := retrieveAppRequest(packet.DID, packet.Sequence)
+            sendPacket(appPacket, serviceEndpoint)    
         } else {
             // Delete the service request as the authentication did not succeed
             deleteAppRequest(packet.DID, packet.Sequence)
