@@ -10,6 +10,64 @@ Thus the DID module reserves two ports: `did-auth` and `did-app` to service thes
 
 Any user or relayer may establish a connection between a counterparty module and one of these two ports. Once established, any channel connected to the `did-auth` port may be used in the `delegateTo` field of a `DelegatedIBCAuthentication` verification method. Similarly, any channel connected to the `did-app` port may be used in the `serviceEndpoint` field of a `DelegatedIBCService` service.
 
+### Message Handler
+
+```go
+func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+    serviceMsg, err := decodeMsg(msg)
+    if err != nil {
+        return nil, err
+    }
+
+    document := resolveDID(serviceMsg.DID)
+
+    verificationMethod := readVerificationMethod(document, serviceMsg.VerificationID)
+
+    service := readService(document, serviceMsg.ServiceID)
+    // create app packet which will be sent upon successful authentication
+    appPacketData := DelegatedServicePacketData{
+        DID: serviceMsg.DID,
+        AppData: serviceMsg.AppData,
+    }
+
+    if verificationMethod.Type == "DelegatedIBCAuthentication" {
+        // create auth packet
+        authPacketData := DelegateAuthPacketData{
+            DID: serviceMsg.DID,
+            Sequence: getSequence(serviceMsg.DID),
+            AppSpecificVerifyFields: verificationMethod.AppSpecificVerifyFields,
+            AppData: serviceMsg.AppData,
+            Authentication: serviceMsg.Authentication,
+        }
+        // send auth packet over IBC to channel specified
+        // in delegateTo field
+        sendAuthPacket(authPacketData, verificationMethod.DelegateTo)
+        
+        // store app packet data along with its intended destination
+        // under DID and sequence so it can be retrieved later
+        storeAppPacket(
+            serviceMsg.DID,
+            getSequence(serviceMsg.DID),
+            service.ServiceEndpoint,
+            appPacketData,
+        )
+
+        incrementSequence(serviceMsg.DID)
+
+        return result, nil
+    }
+
+    // natively verify user-submitted authentication
+    if err := Verify(verificationMethod, serviceMsg.AppData, serviceMsg.Authentication); err != nil {
+        return nil, err
+    }
+
+    // upon successful native authentication, send app packet immediately
+    sendAppPacket(appPacketData, service.ServiceEndpoint)
+    return result, nil
+}
+```
+
 ### Module Callbacks
 
 As mentioned above the module callbacks will be different depending on the channel port. Thus, the DID module will switch on the `portID` and execute the appropriate logic.
@@ -28,15 +86,19 @@ func OnChanOpenInit(
     counterparty channeltypes.Counterparty,
     version string,
 ) error {
-    if portID != "did-auth" || portID != "did-app" {
+    switch portID {
+    case "did-auth":
+        if !SupportedAuthVersion(version) {
+            return error
+        }
+    case "did-app":
+        if !SupportedAppVersion(version) {
+            return error
+        }
+    default:
         return error
     }
-    if portID == "did-auth" && !SupportedAuthVersion(version) {
-        return error
-    }
-    if portID == "did-app" && !SupportedAppVersion(version) {
-        return error
-    }
+    
     if order != UNORDERED {
         return error
     }
@@ -59,15 +121,19 @@ func OnChanOpenTry(
     version,
     counterpartyVersion string,
 ) error {
-    if portID != "did-auth" || portID != "did-app" {
+    switch portID {
+    case "did-auth":
+        if !SupportedAuthVersion(version) {
+            return error
+        }
+    case "did-app":
+        if !SupportedAppVersion(version) {
+            return error
+        }
+    default:
         return error
     }
-    if portID == "did-auth" && !SupportedAuthVersion(version) {
-        return error
-    }
-    if portID == "did-app" && !SupportedAppVersion(version) {
-        return error
-    }
+    
     if counterpartyVersion != version {
         return error
     }
