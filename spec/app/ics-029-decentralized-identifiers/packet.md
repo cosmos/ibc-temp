@@ -33,7 +33,7 @@ Upon receiving a `RequestServiceMessage`, the DID module must perform the follow
 4. If neither 2. or 3. match then return an error
 5. If verification method referenced in verification ID has a native type, then DID module authenticates the `AppData` using the `Authentication` data with the appropriate authentication schema.
 6. If verification method referenced in verification ID has type `DelegatedIBCAuthentication`, then DID module sends a `DelegatedAuthPacket` and thus delegates the authentication to the appropriate third-party auth module specified by the `delegateTo` field.
-7. If either 6. or 7. return an error, then return an error to user. Upon success, forward the app data to the requested app module on behalf of the DID.
+7. If either 5. or 6. return an error, then return an error to user. Upon success, forward the app data to the requested app module on behalf of the DID.
 
 ### Delegated Authentication
 
