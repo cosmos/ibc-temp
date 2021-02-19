@@ -1,7 +1,6 @@
 syntax = "proto3";
-package ibc.lightclients.tendermint.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types";
+package ibc.lightclients.tendermint.v1;
 
 import "tendermint/types/validator.proto";
 import "tendermint/types/types.proto";
