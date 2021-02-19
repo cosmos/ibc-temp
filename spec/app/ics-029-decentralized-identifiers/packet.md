@@ -19,7 +19,7 @@ type RequestServiceMessage {
     // User provided authentication to be verified given the verification method specified by VerificationID
     // This is only meant to be understood by the module that authenticates the request 
     // (either DID module in native authentication or the delegated auth module)
-    Authentication []byte
+    AuthData []byte
 }
 ```
 
@@ -31,7 +31,7 @@ Upon receiving a `RequestServiceMessage`, the DID module must perform the follow
 2. Check if verification method in DID's `authentication` relationship is same as provided verification ID.
 3. Resolve serviceID from DID document and check if verification method in service's `authentication` field matches provided verification ID.
 4. If neither 2. or 3. match then return an error
-5. If verification method referenced in verification ID has a native type, then DID module authenticates the `AppData` using the `Authentication` data with the appropriate authentication schema.
+5. If verification method referenced in verification ID has a native type, then DID module authenticates the `AppData` using the `AuthData` data with the appropriate authentication schema.
 6. If verification method referenced in verification ID has type `DelegatedIBCAuthentication`, then DID module sends a `DelegatedAuthPacket` and thus delegates the authentication to the appropriate third-party auth module specified by the `delegateTo` field.
 7. If either 6. or 7. return an error, then return an error to user. Upon success, forward the app data to the requested app module on behalf of the DID.
 
@@ -49,9 +49,9 @@ type DelegateAuthPacketData {
     AppSpecificVerifyFields []byte
     // App Data intended to be sent to app module
     AppData []byte
-    // Authentication data provided by user must be understandable
+    // AuthData provided by user must be understandable
     // by third-party auth module.
-    Authentication []byte
+    AuthData []byte
 }
 ```
 
@@ -81,6 +81,10 @@ Upon successful authentication, the DID module can then send the app data to the
 ```go
 type DelegatedServicePacketData {
     DID string
+    // only necessary if this is being sent directly from
+    // auth module as DID module must know which app module
+    // to route the packet to.
+    ServiceID string
     // DID module has authenticated that DID truly
     // sent app data.
     // Receiving module does not need to know how.

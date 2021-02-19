@@ -37,7 +37,7 @@ func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
             Sequence: getSequence(serviceMsg.DID),
             AppSpecificVerifyFields: verificationMethod.AppSpecificVerifyFields,
             AppData: serviceMsg.AppData,
-            Authentication: serviceMsg.Authentication,
+            AuthData: serviceMsg.AuthData,
         }
         // send auth packet over IBC to channel specified
         // in delegateTo field
@@ -57,8 +57,8 @@ func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
         return result, nil
     }
 
-    // natively verify user-submitted authentication
-    if err := Verify(verificationMethod, serviceMsg.AppData, serviceMsg.Authentication); err != nil {
+    // natively verify user-submitted AuthData
+    if err := Verify(verificationMethod, serviceMsg.AppData, serviceMsg.AuthData); err != nil {
         return nil, err
     }
 
