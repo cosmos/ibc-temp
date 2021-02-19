@@ -57,7 +57,7 @@ type DelegateAuthPacketData {
 
 The authentication module must understand the app specific verify fields along with the authentication data in order to verify that the app data has been properly authorized.
 
-Upon processing the authentication data, the authentication module will send back an acknowledgement that encodes whether the app data was successfully authenticated.
+Upon processing the authentication data, the authentication module will write an acknowledgement that encodes whether the app data was successfully authenticated.
 
 ```go
 type DelegateAuthPacketAck {
