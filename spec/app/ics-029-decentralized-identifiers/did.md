@@ -40,7 +40,9 @@ Example:
 
 ### DID Controllers and Authentication Relationship
 
-DIDs can associate different verification methods with different relationships. IBC DIDs will regard the verification method associated with the `authentication` relationship as the ultimate verification method that is able to authenticate any packet on behalf of the DID subject.
+DIDs can associate different verification methods with different relationships. This allows DIDs to delegate authority over different services. 
+
+IBC DIDs will regard the verification method associated with the `authentication` relationship as the ultimate verification method that is able to authenticate any packet on behalf of the DID subject. This allows the DID subject to maintain ultimate authority over every service.
 
 DIDs also need a way to update themselves. The DID spec provides for a DID controller field which may or may not be the DID subject. The DID controller itself is a DID, and thus the DID module will authenticate any changes to the DID document using the verification method specified by the authentication relationship in the DID controller's document.
 
