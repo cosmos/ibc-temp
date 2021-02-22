@@ -1,28 +1,14 @@
-# DID Authentication Modules
+# Application Modules
 
-The DID module may delegate authentication to third-party authentication modules through the `did-auth` port. The DID module may send `DelegatedAuthentication` packets to the auth module, if the users are requesting services through the DID module. If the users are interacting directly with the auth module, the auth module may directly send a `DelegatedService` packet to the DID module.
+Upon successful authentication, the DID module will forward a `DelegatedServicePacket` to a third-party app module that will enact some app logic on behalf of the DID that authenticated.
 
-### Send Packet to DID Module
-
-Depending on specific authentication module logic, the auth module may send the packet in a handler, and endblocker, or begin-blocker. 
-
-Once the user interaction(s) have been properly authenticated, the `DelegatedSendPacket` can be sent like so:
-
-```go
-// After doing custom authentication of user interactions
-packet := DelegatedServicePacket{
-    DID: userRequested.DID,
-    ServiceID: userRequested.ServiceID,
-    AppData: userRequested.AppData,
-}
-sendPacketToDidModule(packet)
-```
+Thus app modules connecting through the `did-app` port, must implement callbacks to handle receiving `DelegatedService` packets. But it should not send any packets back to the DID module, thus it does not need to handle acks or timeouts.
 
 ### Auth Module callbacks
 
 ```go
-// OnChanOpenInit ensures that the auth version is supported by 
-// the auth module,
+// OnChanOpenInit ensures that the app version is supported by 
+// the app module,
 // and that the channel is UNORDERED.
 func OnChanOpenInit(
     ctx sdk.Context,
@@ -34,7 +20,7 @@ func OnChanOpenInit(
     counterparty channeltypes.Counterparty,
     version string,
 ) error {
-    if !SupportedAuthVersion(version) {
+    if !SupportedAppVersion(version) {
         return error
     }
     
@@ -46,8 +32,8 @@ func OnChanOpenInit(
 ```
 
 ```go
-// OnChanOpenInit ensures that portID is `did-auth`,
-// ensures that the auth or app version is supported by DID module,
+// OnChanOpenInit ensures that portID is `did-app`,
+// ensures that the app version is supported by DID module,
 // and that the channel is UNORDERED.
 func OnChanOpenTry(
     ctx sdk.Context,
@@ -60,7 +46,7 @@ func OnChanOpenTry(
     version,
     counterpartyVersion string,
 ) error {
-    if !SupportedAuthVersion(version) {
+    if !SupportedAppVersion(version) {
         return error
     }
     
@@ -124,26 +110,27 @@ func OnChanCloseConfirm(
 ```
 
 ```go
-// OnRecvPacket only supports receiving packets from the `did-auth` port
-// since auth modules may directly send packets to DID module in the
-// packet flow 2 case.
-// In this case, the DID module checks that the sending module is authorized to send the packet
-// and then forwards it along.
+// OnRecvPacket supports receiving packets from the `did-app` port
+// The app module may assume the packet is already authenticated by the DID
+// and perform any custom app logic on that basis
 func OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) (*sdk.Result, []byte, error) {
     switch packet.GetSourcePort() {
-    case "did-auth":
-        authPacket := decodeAuthPacket()
+    case "did-app":
+        servicePacket := decodeServicePacket()
         
-        err := DoCustomVerification(authPacket.AppSpecificVerifyFields, authPacket.AppData, authPacket.AuthData)
+        err := DoCustomAppLogic(servicePacket.DID, servicePacket.AppData)
 
+        // App module may OPTIONALLY write acknowledgement.
         if err != nil {
-            return result, successfulAck, nil
-        } else {
             return result, unsuccessfulAck, nil
+        } else {
+            return result, successfulAck, nil
+
         }
+    // the app module may also process packets from different ports
     default:
         return nil, nil, error
     }
@@ -151,27 +138,24 @@ func OnRecvPacket(
 ```
 
 ```go
-// OnAcknowledgementPacket will listen for acks on the did-auth port and upon receiving a successful ack from the auth module,
-// the did module will forward the app packet to the requested app module.
-// It will delete the stored service request on a failed ack.
-// Any acks arriving from the app module will simply be logged for the end user.
+// OnAcknowledgementPacket is a no-op for the 'did-app' port of the app module.
+// Since the app module does not send packets to DID module.
 func OnAcknowledgementPacket(
     ctx sdk.Context,
     packet channeltypes.Packet,
     acknowledgement []byte,
 ) (*sdk.Result, error) {
-    // Do custom acknowledgement logic
     return nil, nil
 }
 ```
 
 ```go
-// OnTimeoutPacket will delete a service request if the DelegatedAuthPacket times out
+// OnTimeoutPacket is a no-op for the 'did-app' port of the app module.
+// Since the app module does not send packets to DID module.
 func OnTimeoutPacket(
     ctx sdk.Context,
     packet channeltypes.Packet,
 ) (*sdk.Result, error) {
-    // Do custom timeout logic
     return nil
 }
 ```
